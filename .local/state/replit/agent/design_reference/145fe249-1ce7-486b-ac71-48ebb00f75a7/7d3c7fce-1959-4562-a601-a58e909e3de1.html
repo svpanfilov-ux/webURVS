@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система управления рабочим временем</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1976D2',
+                        'primary-dark': '#1565C0',
+                        secondary: '#424242',
+                        success: '#4CAF50',
+                        warning: '#FF9800',
+                        error: '#F44336',
+                        'bg-light': '#FAFAFA',
+                        'bg-dark': '#121212',
+                        'surface-light': '#FFFFFF',
+                        'surface-dark': '#1E1E1E'
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .transition-theme { transition: all 0.3s ease; }
+        .sent-period { background-color: #E5E7EB !important; color: #6B7280 !important; pointer-events: none; }
+        .quality-rating button.active { background-color: #1976D2; color: white; }
+        .context-menu { position: absolute; background: white; border: 1px solid #E5E7EB; border-radius: 8px; padding: 8px 0; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 1000; }
+        .context-menu button { display: block; width: 100%; text-align: left; padding: 8px 16px; background: none; border: none; }
+        .context-menu button:hover { background-color: #F3F4F6; }
+    </style>
+</head>
+<body class="bg-bg-light dark:bg-bg-dark text-secondary dark:text-gray-200 transition-theme min-h-screen">
+    
+    <!-- @COMPONENT: App -->
+    <div class="min-h-screen flex flex-col">
+        
+        <!-- @COMPONENT: Header -->
+        <header class="bg-surface-light dark:bg-surface-dark shadow-lg transition-theme">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center space-x-4">
+                        <i class="fas fa-clock text-primary text-2xl"></i>
+                        <h1 class="text-xl font-semibold text-secondary dark:text-white">
+                            Система управления рабочим временем
+                        </h1>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <!-- Theme Toggle -->
+                        <button id="themeToggle" class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                            <i class="fas fa-moon dark:hidden text-gray-600"></i>
+                            <i class="fas fa-sun hidden dark:inline text-yellow-400"></i>
+                        </button>
+                        
+                        <!-- User Menu -->
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm text-gray-600 dark:text-gray-300" data-bind="user.name">Иванов И.И.</span>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">(Менеджер)</span>
+                            <button class="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <!-- @END_COMPONENT: Header -->
+
+        <!-- @COMPONENT: Navigation -->
+        <nav class="bg-surface-light dark:bg-surface-dark border-b border-gray-200 dark:border-gray-700 transition-theme">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex space-x-8">
+                    <button class="nav-tab active py-4 px-1 border-b-2 border-primary text-primary font-medium text-sm" data-tab="dashboard">
+                        <i class="fas fa-home mr-2"></i>Главное
+                    </button>
+                    <button class="nav-tab py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-medium text-sm" data-tab="employees">
+                        <i class="fas fa-users mr-2"></i>Сотрудники
+                    </button>
+                    <button class="nav-tab py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-medium text-sm" data-tab="timesheet">
+                        <i class="fas fa-calendar-alt mr-2"></i>Табель
+                    </button>
+                    <button class="nav-tab py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-medium text-sm" data-tab="reports">
+                        <i class="fas fa-file-alt mr-2"></i>Отчёты
+                    </button>
+                    <button class="nav-tab py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-medium text-sm" data-tab="settings">
+                        <i class="fas fa-cog mr-2"></i>Настройки
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <!-- @END_COMPONENT: Navigation -->
+
+        <!-- @COMPONENT: MainContent -->
+        <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            
+            <!-- @COMPONENT: DashboardPanel -->
+            <div id="dashboard-panel" class="tab-content">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-semibold text-secondary dark:text-white mb-2">Дашборд</h2>
+                    <p class="text-gray-600 dark:text-gray-400">Общая информация и статистика</p>
+                </div>
+
+                <!-- Deadline Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow p-6 transition-theme">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">До закрытия аванса</p>
+                                <p class="text-2xl font-semibold text-warning mt-1" data-bind="daysToAdvanceDeadline">3 дня</p>
+                            </div>
+                            <div class="bg-warning/10 p-3 rounded-full">
+                                <i class="fas fa-exclamation-triangle text-warning text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                <div class="bg-warning h-2 rounded-full" style="width: 25%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow p-6 transition-theme">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">До закрытия зарплаты</p>
+                                <p class="text-2xl font-semibold text-success mt-1" data-bind="daysToSalaryDeadline">12 дней</p>
+                            </div>
+                            <div class="bg-success/10 p-3 rounded-full">
+                                <i class="fas fa-check-circle text-success text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                <div class="bg-success h-2 rounded-full" style="width: 75%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow p-6 transition-theme">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Активных сотрудников</p>
+                                <p class="text-2xl font-semibold text-primary mt-1" data-bind="activeEmployees">24</p>
+                            </div>
+                            <div class="bg-primary/10 p-3 rounded-full">
+                                <i class="fas fa-users text-primary text-xl"></i>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-600 dark:text-gray-400 mt-2">Всего: <span data-bind="totalEmployees">28</span></p>
+                    </div>
+                </div>
+
+                <!-- Statistics -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow p-6 transition-theme">
+                        <h3 class="text-lg font-medium text-secondary dark:text-white mb-4">Месячная статистика</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600 dark:text-gray-400">Норма часов за месяц:</span>
+                                <span class="font-medium" data-bind="monthlyNormHours">176 ч</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600 dark:text-gray-400">Фактически отработано:</span>
+                                <span class="font-medium text-success" data-bind="actualHours">164 ч</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600 dark:text-gray-400">Отклонение от нормы:</span>
+                                <span class="font-medium text-warning" data-bind="deviation">-12 ч</span>
+                            </div>
+                            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mt-4">
+                                <div class="bg-success h-3 rounded-full" style="width: 93%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow p-6 transition-theme">
+                        <h3 class="text-lg font-medium text-secondary dark:text-white mb-4">Быстрые действия</h3>
+                        <div class="space-y-3">
+                            <button class="w-full bg-primary hover:bg-primary-dark text-white font-medium py-3 px-4 rounded-lg transition-colors" data-event="click:navigateToTimesheet">
+                                <i class="fas fa-plus mr-2"></i>Заполнить табель
+                            </button>
+                            <button class="w-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-secondary dark:text-white font-medium py-3 px-4 rounded-lg transition-colors" data-event="click:navigateToEmployees">
+                                <i class="fas fa-users mr-2"></i>Управление сотрудниками
+                            </button>
+                            <button class="w-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-secondary dark:text-white font-medium py-3 px-4 rounded-lg transition-colors" data-event="click:navigateToReports">
+                                <i class="fas fa-file-export mr-2"></i>Сформировать отчёт
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: DashboardPanel -->
+
+            <!-- @COMPONENT: EmployeesPanel -->
+            <div id="employees-panel" class="tab-content hidden">
+                <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div class="mb-4 sm:mb-0">
+                        <h2 class="text-2xl font-semibold text-secondary dark:text-white mb-2">Управление сотрудниками</h2>
+                        <p class="text-gray-600 dark:text-gray-400">Добавление, редактирование и управление персоналом</p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                        <button class="bg-success hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition-colors" data-event="click:addEmployee">
+                            <i class="fas fa-plus mr-2"></i>Добавить сотрудника
+                        </button>
+                        <button class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg transition-colors" data-event="click:importCSV">
+                            <i class="fas fa-upload mr-2"></i>Импорт CSV
+                        </button>
+                        <button class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-secondary dark:text-white font-medium py-2 px-4 rounded-lg transition-colors" data-event="click:exportCSV">
+                            <i class="fas fa-download mr-2"></i>Экспорт CSV
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Search and Filters -->
+                <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow p-4 mb-6 transition-theme">
+                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                        <div class="flex-1">
+                            <input type="text" placeholder="Поиск по ФИО..." class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white">
+                        </div>
+                        <select class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white">
+                            <option value="">Все статусы</option>
+                            <option value="active">Активный</option>
+                            <option value="not_registered">Подработка</option>
+                            <option value="fired">Уволен</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Active Employees -->
+                <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow mb-6 transition-theme">
+                    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                        <h3 class="text-lg font-medium text-secondary dark:text-white">
+                            Активные сотрудники
+                            <span class="ml-2 bg-success text-white text-xs px-2 py-1 rounded-full" data-bind="activeEmployeesCount">24</span>
+                        </h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 dark:bg-gray-800">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">ФИО</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Должность</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Статус</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-surface-light dark:bg-surface-dark divide-y divide-gray-200 dark:divide-gray-700" data-mock="true">
+                                <!-- @MAP: activeEmployees.map(employee => ( -->
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-secondary dark:text-white" data-bind="employee.fullName">Иванов Иван Иванович</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-600 dark:text-gray-300" data-bind="employee.position">Менеджер по продажам</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 text-xs font-medium bg-success/10 text-success rounded-full">Активный</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div class="flex space-x-2">
+                                            <button class="text-primary hover:text-primary-dark" data-event="click:editEmployee">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="text-error hover:text-red-700" data-event="click:deleteEmployee">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-secondary dark:text-white">Петров Пётр Петрович</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-600 dark:text-gray-300">Кассир</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 text-xs font-medium bg-success/10 text-success rounded-full">Активный</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div class="flex space-x-2">
+                                            <button class="text-primary hover:text-primary-dark">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="text-error hover:text-red-700">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- @END_MAP )) -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-6 py-3 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+                        <div class="text-sm text-gray-600 dark:text-gray-400">
+                            Итого часов по группе: <span class="font-medium" data-bind="activeGroupTotalHours">3,840 ч</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Part-time Employees -->
+                <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow transition-theme">
+                    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                        <h3 class="text-lg font-medium text-secondary dark:text-white">
+                            Подработка
+                            <span class="ml-2 bg-warning text-white text-xs px-2 py-1 rounded-full" data-bind="partTimeEmployeesCount">4</span>
+                        </h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 dark:bg-gray-800">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">ФИО</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Должность</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Статус</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-surface-light dark:bg-surface-dark divide-y divide-gray-200 dark:divide-gray-700" data-mock="true">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-secondary dark:text-white">Сидоров Семён Семёнович</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-600 dark:text-gray-300">Помощник</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 text-xs font-medium bg-warning/10 text-warning rounded-full">Подработка</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div class="flex space-x-2">
+                                            <button class="text-primary hover:text-primary-dark">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="text-error hover:text-red-700">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-6 py-3 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+                        <div class="text-sm text-gray-600 dark:text-gray-400">
+                            Итого часов по группе: <span class="font-medium" data-bind="partTimeGroupTotalHours">240 ч</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: EmployeesPanel -->
+
+            <!-- @COMPONENT: TimesheetPanel -->
+            <div id="timesheet-panel" class="tab-content hidden">
+                <div class="mb-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+                        <div>
+                            <h2 class="text-2xl font-semibold text-secondary dark:text-white mb-2">Табель учёта рабочего времени</h2>
+                            <p class="text-gray-600 dark:text-gray-400">Ввод отработанных часов и оценок качества работы</p>
+                        </div>
+                        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                            <select class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white">
+                                <option value="2024-01">Январь 2024</option>
+                                <option value="2024-02" selected>Февраль 2024</option>
+                                <option value="2024-03">Март 2024</option>
+                            </select>
+                            <button class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg transition-colors" data-event="click:autoFillPreviousMonth">
+                                <i class="fas fa-magic mr-2"></i>Автозаполнение
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Period Status -->
+                    <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow p-4 mb-6 transition-theme">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Период аванса (1-15):</span>
+                                    <span class="px-3 py-1 text-xs font-medium bg-success/10 text-success rounded-full">Отправлено 16.02.2024</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Период зарплаты (1-29):</span>
+                                    <span class="px-3 py-1 text-xs font-medium bg-warning/10 text-warning rounded-full">В работе</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timesheet Table -->
+                <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow overflow-hidden transition-theme">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50 dark:bg-gray-800">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider sticky left-0 bg-gray-50 dark:bg-gray-800 min-w-[200px]">Сотрудник</th>
+                                    <!-- @MAP: daysInMonth.map(day => ( -->
+                                    <th class="px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[60px]">1<br><span class="text-xs text-gray-400">Чт</span></th>
+                                    <th class="px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[60px]">2<br><span class="text-xs text-gray-400">Пт</span></th>
+                                    <th class="px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[60px] bg-red-50 dark:bg-red-900/20">3<br><span class="text-xs text-red-400">Сб</span></th>
+                                    <th class="px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[60px] bg-red-50 dark:bg-red-900/20">4<br><span class="text-xs text-red-400">Вс</span></th>
+                                    <th class="px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[60px]">5<br><span class="text-xs text-gray-400">Пн</span></th>
+                                    <th class="px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[60px]">6<br><span class="text-xs text-gray-400">Вт</span></th>
+                                    <th class="px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[60px]">7<br><span class="text-xs text-gray-400">Ср</span></th>
+                                    <!-- Continue for all days... -->
+                                    <th class="px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[60px]">...</th>
+                                    <th class="px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[60px]">29<br><span class="text-xs text-gray-400">Чт</span></th>
+                                    <!-- @END_MAP )) -->
+                                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[80px]">Итого</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-surface-light dark:bg-surface-dark divide-y divide-gray-200 dark:divide-gray-700">
+                                <!-- Active Employees Section -->
+                                <tr class="bg-gray-50 dark:bg-gray-800">
+                                    <td colspan="100%" class="px-4 py-2 text-sm font-medium text-secondary dark:text-white">
+                                        Активные сотрудники (24)
+                                    </td>
+                                </tr>
+                                
+                                <!-- @MAP: activeEmployees.map(employee => ( -->
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                    <td class="px-4 py-2 sticky left-0 bg-surface-light dark:bg-surface-dark border-r border-gray-200 dark:border-gray-700">
+                                        <div class="text-sm font-medium text-secondary dark:text-white" data-bind="employee.name">Иванов И.И.</div>
+                                        <div class="text-xs text-gray-500 dark:text-gray-400" data-bind="employee.position">Менеджер</div>
+                                    </td>
+                                    <!-- Days 1-15 (Advance period - sent, greyed out) -->
+                                    <td class="px-2 py-2 text-center sent-period">
+                                        <div class="text-sm">8</div>
+                                        <div class="quality-rating mt-1 flex justify-center space-x-1">
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                            <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
+                                        </div>
+                                    </td>
+                                    <td class="px-2 py-2 text-center sent-period">
+                                        <div class="text-sm">8</div>
+                                        <div class="quality-rating mt-1 flex justify-center space-x-1">
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                            <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
+                                        </div>
+                                    </td>
+                                    <!-- Weekend -->
+                                    <td class="px-2 py-2 text-center bg-red-50 dark:bg-red-900/20 sent-period">
+                                        <div class="text-sm text-gray-500">—</div>
+                                    </td>
+                                    <td class="px-2 py-2 text-center bg-red-50 dark:bg-red-900/20 sent-period">
+                                        <div class="text-sm text-gray-500">—</div>
+                                    </td>
+                                    <!-- Continue advance period... -->
+                                    <td class="px-2 py-2 text-center sent-period">
+                                        <div class="text-sm">8</div>
+                                        <div class="quality-rating mt-1 flex justify-center space-x-1">
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                        </div>
+                                    </td>
+                                    <td class="px-2 py-2 text-center sent-period">
+                                        <div class="text-sm">О</div>
+                                    </td>
+                                    <td class="px-2 py-2 text-center sent-period">
+                                        <div class="text-sm">О</div>
+                                    </td>
+                                    <!-- Salary period (16-end) - editable -->
+                                    <td class="px-2 py-2 text-center">
+                                        <input type="number" min="0" max="24" class="w-12 h-8 text-center text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" value="8" data-event="contextmenu:showContextMenu">
+                                        <div class="quality-rating mt-1 flex justify-center space-x-1">
+                                            <button class="w-2 h-2 bg-primary rounded-full"></button>
+                                            <button class="w-2 h-2 bg-primary rounded-full"></button>
+                                            <button class="w-2 h-2 bg-primary rounded-full"></button>
+                                            <button class="w-2 h-2 bg-gray-300 rounded-full"></button>
+                                        </div>
+                                    </td>
+                                    <td class="px-2 py-2 text-center">
+                                        <div class="text-sm font-medium">184</div>
+                                    </td>
+                                </tr>
+
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                    <td class="px-4 py-2 sticky left-0 bg-surface-light dark:bg-surface-dark border-r border-gray-200 dark:border-gray-700">
+                                        <div class="text-sm font-medium text-secondary dark:text-white">Петров П.П.</div>
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">Кассир</div>
+                                    </td>
+                                    <td class="px-2 py-2 text-center sent-period">
+                                        <div class="text-sm">8</div>
+                                        <div class="quality-rating mt-1 flex justify-center space-x-1">
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                            <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
+                                            <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
+                                        </div>
+                                    </td>
+                                    <td class="px-2 py-2 text-center sent-period">
+                                        <div class="text-sm">Б</div>
+                                    </td>
+                                    <td class="px-2 py-2 text-center bg-red-50 dark:bg-red-900/20 sent-period">
+                                        <div class="text-sm text-gray-500">—</div>
+                                    </td>
+                                    <td class="px-2 py-2 text-center bg-red-50 dark:bg-red-900/20 sent-period">
+                                        <div class="text-sm text-gray-500">—</div>
+                                    </td>
+                                    <td class="px-2 py-2 text-center sent-period">
+                                        <div class="text-sm">НН</div>
+                                    </td>
+                                    <td class="px-2 py-2 text-center sent-period">
+                                        <div class="text-sm">8</div>
+                                        <div class="quality-rating mt-1 flex justify-center space-x-1">
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                        </div>
+                                    </td>
+                                    <td class="px-2 py-2 text-center sent-period">
+                                        <div class="text-sm">8</div>
+                                        <div class="quality-rating mt-1 flex justify-center space-x-1">
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                            <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
+                                        </div>
+                                    </td>
+                                    <td class="px-2 py-2 text-center">
+                                        <input type="number" min="0" max="24" class="w-12 h-8 text-center text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" value="8">
+                                        <div class="quality-rating mt-1 flex justify-center space-x-1">
+                                            <button class="w-2 h-2 bg-primary rounded-full"></button>
+                                            <button class="w-2 h-2 bg-primary rounded-full"></button>
+                                            <button class="w-2 h-2 bg-primary rounded-full"></button>
+                                            <button class="w-2 h-2 bg-gray-300 rounded-full"></button>
+                                        </div>
+                                    </td>
+                                    <td class="px-2 py-2 text-center">
+                                        <div class="text-sm font-medium">160</div>
+                                    </td>
+                                </tr>
+                                <!-- @END_MAP )) -->
+
+                                <!-- Active employees subtotal -->
+                                <tr class="bg-blue-50 dark:bg-blue-900/20 font-medium">
+                                    <td class="px-4 py-2 text-sm text-secondary dark:text-white">Итого по активным сотрудникам (24):</td>
+                                    <td colspan="20" class="px-4 py-2"></td>
+                                    <td class="px-4 py-2 text-center text-sm font-semibold" data-bind="activeTotalHours">3,840 ч</td>
+                                </tr>
+
+                                <!-- Part-time Employees Section -->
+                                <tr class="bg-gray-50 dark:bg-gray-800">
+                                    <td colspan="100%" class="px-4 py-2 text-sm font-medium text-secondary dark:text-white">
+                                        Подработка (4)
+                                    </td>
+                                </tr>
+
+                                <!-- @MAP: partTimeEmployees.map(employee => ( -->
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                    <td class="px-4 py-2 sticky left-0 bg-surface-light dark:bg-surface-dark border-r border-gray-200 dark:border-gray-700">
+                                        <div class="text-sm font-medium text-secondary dark:text-white">Сидоров С.С.</div>
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">Помощник</div>
+                                    </td>
+                                    <td class="px-2 py-2 text-center sent-period">
+                                        <div class="text-sm">4</div>
+                                        <div class="quality-rating mt-1 flex justify-center space-x-1">
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                            <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
+                                        </div>
+                                    </td>
+                                    <td class="px-2 py-2 text-center sent-period">
+                                        <div class="text-sm">—</div>
+                                    </td>
+                                    <td class="px-2 py-2 text-center bg-red-50 dark:bg-red-900/20 sent-period">
+                                        <div class="text-sm text-gray-500">—</div>
+                                    </td>
+                                    <td class="px-2 py-2 text-center bg-red-50 dark:bg-red-900/20 sent-period">
+                                        <div class="text-sm text-gray-500">—</div>
+                                    </td>
+                                    <td class="px-2 py-2 text-center sent-period">
+                                        <div class="text-sm">6</div>
+                                        <div class="quality-rating mt-1 flex justify-center space-x-1">
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                            <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
+                                            <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
+                                        </div>
+                                    </td>
+                                    <td class="px-2 py-2 text-center sent-period">
+                                        <div class="text-sm">4</div>
+                                        <div class="quality-rating mt-1 flex justify-center space-x-1">
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                            <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                            <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
+                                        </div>
+                                    </td>
+                                    <td class="px-2 py-2 text-center sent-period">
+                                        <div class="text-sm">—</div>
+                                    </td>
+                                    <td class="px-2 py-2 text-center">
+                                        <input type="number" min="0" max="24" class="w-12 h-8 text-center text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" value="6">
+                                        <div class="quality-rating mt-1 flex justify-center space-x-1">
+                                            <button class="w-2 h-2 bg-primary rounded-full"></button>
+                                            <button class="w-2 h-2 bg-primary rounded-full"></button>
+                                            <button class="w-2 h-2 bg-primary rounded-full"></button>
+                                            <button class="w-2 h-2 bg-gray-300 rounded-full"></button>
+                                        </div>
+                                    </td>
+                                    <td class="px-2 py-2 text-center">
+                                        <div class="text-sm font-medium">60</div>
+                                    </td>
+                                </tr>
+                                <!-- @END_MAP )) -->
+
+                                <!-- Part-time subtotal -->
+                                <tr class="bg-yellow-50 dark:bg-yellow-900/20 font-medium">
+                                    <td class="px-4 py-2 text-sm text-secondary dark:text-white">Итого по подработке (4):</td>
+                                    <td colspan="20" class="px-4 py-2"></td>
+                                    <td class="px-4 py-2 text-center text-sm font-semibold" data-bind="partTimeTotalHours">240 ч</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Legend -->
+                <div class="mt-6 bg-surface-light dark:bg-surface-dark rounded-lg shadow p-4 transition-theme">
+                    <h3 class="text-sm font-medium text-secondary dark:text-white mb-3">Обозначения:</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-gray-600 dark:text-gray-400">
+                        <div>Б — Больничный</div>
+                        <div>О — Отпуск</div>
+                        <div>НН — Прогул</div>
+                        <div>У — Уволен</div>
+                    </div>
+                    <div class="mt-3 text-xs text-gray-600 dark:text-gray-400">
+                        <p>Оценка качества: 1 — Плохо, 2 — Удовл., 3 — Нормально, 4 — Отлично (по умолчанию: 3)</p>
+                        <p class="mt-1">Серые ячейки — отправленный период (недоступно для редактирования)</p>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: TimesheetPanel -->
+
+            <!-- @COMPONENT: ReportsPanel -->
+            <div id="reports-panel" class="tab-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-semibold text-secondary dark:text-white mb-2">Формирование отчётов</h2>
+                    <p class="text-gray-600 dark:text-gray-400">Создание и отправка отчётов за отчётные периоды</p>
+                </div>
+
+                <!-- Report Periods -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <!-- Advance Report -->
+                    <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow p-6 transition-theme">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg font-medium text-secondary dark:text-white">Отчёт по авансу</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Период: 1-15 февраля 2024</p>
+                            </div>
+                            <span class="px-3 py-1 text-sm font-medium bg-success/10 text-success rounded-full">Отправлено</span>
+                        </div>
+                        <div class="space-y-3 mb-4">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600 dark:text-gray-400">Всего сотрудников:</span>
+                                <span data-bind="advanceReport.totalEmployees">28</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600 dark:text-gray-400">Отработано часов:</span>
+                                <span data-bind="advanceReport.totalHours">1,920 ч</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600 dark:text-gray-400">Дата отправки:</span>
+                                <span data-bind="advanceReport.sentDate">16.02.2024 14:32</span>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-medium py-2 px-4 rounded-lg cursor-not-allowed" disabled>
+                                <i class="fas fa-paper-plane mr-2"></i>Уже отправлен
+                            </button>
+                            <button class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg transition-colors" data-event="click:previewAdvanceReport">
+                                <i class="fas fa-eye mr-2"></i>Просмотр
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Salary Report -->
+                    <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow p-6 transition-theme">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg font-medium text-secondary dark:text-white">Отчёт по зарплате</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Период: 1-29 февраля 2024</p>
+                            </div>
+                            <span class="px-3 py-1 text-sm font-medium bg-warning/10 text-warning rounded-full">В работе</span>
+                        </div>
+                        <div class="space-y-3 mb-4">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600 dark:text-gray-400">Всего сотрудников:</span>
+                                <span data-bind="salaryReport.totalEmployees">28</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600 dark:text-gray-400">Отработано часов:</span>
+                                <span data-bind="salaryReport.totalHours">4,080 ч</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600 dark:text-gray-400">Доступна до:</span>
+                                <span class="text-warning font-medium" data-bind="salaryReport.deadline">1 марта 2024</span>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="flex-1 bg-success hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition-colors" data-event="click:sendSalaryReport" data-implementation="Should validate timesheet completion before sending">
+                                <i class="fas fa-paper-plane mr-2"></i>Отправить отчёт
+                            </button>
+                            <button class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-secondary dark:text-white font-medium py-2 px-4 rounded-lg transition-colors" data-event="click:previewSalaryReport">
+                                <i class="fas fa-eye mr-2"></i>Просмотр
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Report History -->
+                <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow transition-theme">
+                    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                        <h3 class="text-lg font-medium text-secondary dark:text-white">История отчётов</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 dark:bg-gray-800">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Период</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Тип</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Сотрудников</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Часов</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Статус</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Дата отправки</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-surface-light dark:bg-surface-dark divide-y divide-gray-200 dark:divide-gray-700" data-mock="true">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-secondary dark:text-white">1-15 февраля 2024</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">Аванс</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">28</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">1,920 ч</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 text-xs font-medium bg-success/10 text-success rounded-full">Отправлено</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">16.02.2024 14:32</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-primary hover:text-primary-dark" data-event="click:viewReport">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-secondary dark:text-white">1-31 января 2024</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">Зарплата</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">26</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">4,160 ч</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 text-xs font-medium bg-success/10 text-success rounded-full">Отправлено</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">01.02.2024 16:45</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-primary hover:text-primary-dark">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-secondary dark:text-white">1-15 января 2024</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">Аванс</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">26</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">2,080 ч</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 text-xs font-medium bg-success/10 text-success rounded-full">Отправлено</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">16.01.2024 15:20</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-primary hover:text-primary-dark">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: ReportsPanel -->
+
+            <!-- @COMPONENT: SettingsPanel -->
+            <div id="settings-panel" class="tab-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-semibold text-secondary dark:text-white mb-2">Настройки</h2>
+                    <p class="text-gray-600 dark:text-gray-400">Конфигурация приложения и параметры системы</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- General Settings -->
+                    <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow p-6 transition-theme">
+                        <h3 class="text-lg font-medium text-secondary dark:text-white mb-4">Основные настройки</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Тема оформления</label>
+                                <select class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white">
+                                    <option value="light">Светлая</option>
+                                    <option value="dark">Тёмная</option>
+                                    <option value="auto">Автоматическая</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Часовой пояс</label>
+                                <select class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white">
+                                    <option value="Europe/Moscow">Москва (GMT+3)</option>
+                                    <option value="Europe/Kiev">Киев (GMT+2)</option>
+                                    <option value="Asia/Yekaterinburg">Екатеринбург (GMT+5)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Рабочих дней в неделе</label>
+                                <select class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white">
+                                    <option value="5">5 дней (Пн-Пт)</option>
+                                    <option value="6">6 дней (Пн-Сб)</option>
+                                    <option value="7">7 дней</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Стандартная оценка качества</label>
+                                <select class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white">
+                                    <option value="1">1 - Плохо</option>
+                                    <option value="2">2 - Удовлетворительно</option>
+                                    <option value="3" selected>3 - Нормально</option>
+                                    <option value="4">4 - Отлично</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notification Settings -->
+                    <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow p-6 transition-theme">
+                        <h3 class="text-lg font-medium text-secondary dark:text-white mb-4">Уведомления</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Напоминания о дедлайнах</label>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">За 2 дня до закрытия периода</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" checked class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Подтверждение отправки</label>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Уведомление об успешной отправке отчёта</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" checked class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Звуковые уведомления</label>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Звуковые сигналы для важных событий</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Settings -->
+                    <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow p-6 transition-theme">
+                        <h3 class="text-lg font-medium text-secondary dark:text-white mb-4">Система</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">URL сервера отчётов</label>
+                                <input type="url" placeholder="https://api.example.com/submit-report" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white" data-bind="settings.serverUrl">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Автосохранение</label>
+                                <select class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white">
+                                    <option value="immediate">Немедленно</option>
+                                    <option value="5">Каждые 5 секунд</option>
+                                    <option value="10">Каждые 10 секунд</option>
+                                    <option value="30">Каждые 30 секунд</option>
+                                </select>
+                            </div>
+
+                            <div class="space-y-2">
+                                <button class="w-full bg-warning hover:bg-orange-600 text-white font-medium py-2 px-4 rounded-lg transition-colors" data-event="click:exportData" data-implementation="Should export all data to JSON file">
+                                    <i class="fas fa-download mr-2"></i>Экспорт данных
+                                </button>
+                                <button class="w-full bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg transition-colors" data-event="click:importData" data-implementation="Should allow importing data from JSON file">
+                                    <i class="fas fa-upload mr-2"></i>Импорт данных
+                                </button>
+                                <button class="w-full bg-error hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors" data-event="click:clearData" data-implementation="Should ask for confirmation before clearing">
+                                    <i class="fas fa-trash mr-2"></i>Очистить все данные
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- About -->
+                    <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow p-6 transition-theme">
+                        <h3 class="text-lg font-medium text-secondary dark:text-white mb-4">О приложении</h3>
+                        <div class="space-y-3 text-sm text-gray-600 dark:text-gray-300">
+                            <div class="flex justify-between">
+                                <span>Версия:</span>
+                                <span>1.0.0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Последнее обновление:</span>
+                                <span>20.02.2024</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Статус синхронизации:</span>
+                                <span class="text-success">
+                                    <i class="fas fa-check-circle mr-1"></i>Синхронизировано
+                                </span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Объём данных:</span>
+                                <span>2.3 МБ</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <button class="w-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-secondary dark:text-white font-medium py-2 px-4 rounded-lg transition-colors" data-event="click:syncData">
+                                <i class="fas fa-sync mr-2"></i>Синхронизировать
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: SettingsPanel -->
+        </main>
+        <!-- @END_COMPONENT: MainContent -->
+    </div>
+    <!-- @END_COMPONENT: App -->
+
+    <!-- @COMPONENT: Modals and Overlays -->
+    
+    <!-- Context Menu for Mass Fill -->
+    <div id="contextMenu" class="context-menu hidden">
+        <button data-action="copy-to-end">Скопировать до конца периода</button>
+        <button data-action="fill-5-2">Заполнить график 5/2</button>
+        <button data-action="fill-2-2">Заполнить график 2/2</button>
+    </div>
+
+    <!-- Employee Modal -->
+    <div id="employeeModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow-xl w-full max-w-md mx-4 transition-theme">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-medium text-secondary dark:text-white">Добавить сотрудника</h3>
+            </div>
+            <form class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">ФИО</label>
+                    <input type="text" required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Должность</label>
+                    <input type="text" required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Статус</label>
+                    <select required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white">
+                        <option value="active">Активный</option>
+                        <option value="not_registered">Подработка</option>
+                        <option value="fired">Уволен</option>
+                    </select>
+                </div>
+                <div id="firedDateField" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Дата увольнения</label>
+                    <input type="date" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white">
+                </div>
+                <div class="flex justify-end space-x-2 pt-4">
+                    <button type="button" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200" data-action="close-modal">Отмена</button>
+                    <button type="submit" class="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed top-4 right-4 bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 transform translate-x-full transition-transform z-50">
+        <div class="flex items-center space-x-3">
+            <div id="toastIcon" class="flex-shrink-0">
+                <i class="fas fa-check-circle text-success text-xl"></i>
+            </div>
+            <div id="toastMessage" class="text-sm text-secondary dark:text-white">Сообщение</div>
+            <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200" onclick="hideToast()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: Modals and Overlays -->
+
+    <script>
+        // TODO: Implement business logic, API calls, and state management
+        
+        (function() {
+            'use strict';
+            
+            // Theme management
+            let isDarkMode = localStorage.getItem('darkMode') === 'true';
+            
+            function toggleTheme() {
+                isDarkMode = !isDarkMode;
+                localStorage.setItem('darkMode', isDarkMode);
+                document.documentElement.classList.toggle('dark', isDarkMode);
+            }
+            
+            function initTheme() {
+                if (isDarkMode || (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                    isDarkMode = true;
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    isDarkMode = false;
+                }
+            }
+            
+            // Navigation management
+            function switchTab(tabName) {
+                // Hide all panels
+                document.querySelectorAll('.tab-content').forEach(panel => {
+                    panel.classList.add('hidden');
+                });
+                
+                // Show selected panel
+                const targetPanel = document.getElementById(`${tabName}-panel`);
+                if (targetPanel) {
+                    targetPanel.classList.remove('hidden');
+                }
+                
+                // Update nav buttons
+                document.querySelectorAll('.nav-tab').forEach(btn => {
+                    btn.classList.remove('active', 'border-primary', 'text-primary');
+                    btn.classList.add('border-transparent', 'text-gray-500');
+                });
+                
+                const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
+                if (activeTab) {
+                    activeTab.classList.add('active', 'border-primary', 'text-primary');
+                    activeTab.classList.remove('border-transparent', 'text-gray-500');
+                }
+            }
+            
+            // Toast notifications
+            window.showToast = function(message, type = 'success') {
+                const toast = document.getElementById('toast');
+                const toastMessage = document.getElementById('toastMessage');
+                const toastIcon = document.getElementById('toastIcon');
+                
+                toastMessage.textContent = message;
+                
+                // Update icon based on type
+                const iconClasses = {
+                    success: 'fas fa-check-circle text-success',
+                    error: 'fas fa-exclamation-circle text-error',
+                    warning: 'fas fa-exclamation-triangle text-warning',
+                    info: 'fas fa-info-circle text-primary'
+                };
+                
+                toastIcon.innerHTML = `<i class="${iconClasses[type] || iconClasses.success} text-xl"></i>`;
+                
+                // Show toast
+                toast.classList.remove('translate-x-full');
+                
+                // Auto hide after 3 seconds
+                setTimeout(() => {
+                    hideToast();
+                }, 3000);
+            };
+            
+            window.hideToast = function() {
+                const toast = document.getElementById('toast');
+                toast.classList.add('translate-x-full');
+            };
+            
+            // Context menu for timesheet
+            function showContextMenu(event) {
+                event.preventDefault();
+                const contextMenu = document.getElementById('contextMenu');
+                contextMenu.style.left = event.pageX + 'px';
+                contextMenu.style.top = event.pageY + 'px';
+                contextMenu.classList.remove('hidden');
+                
+                // Hide menu when clicking elsewhere
+                document.addEventListener('click', function hideMenu() {
+                    contextMenu.classList.add('hidden');
+                    document.removeEventListener('click', hideMenu);
+                });
+            }
+            
+            // Modal management
+            function showModal(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.classList.remove('hidden');
+                }
+            }
+            
+            function hideModal(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.classList.add('hidden');
+                }
+            }
+            
+            // Quality rating interactions
+            function setupQualityRatings() {
+                document.querySelectorAll('.quality-rating button').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const rating = Array.from(this.parentElement.children).indexOf(this) + 1;
+                        const buttons = this.parentElement.querySelectorAll('button');
+                        
+                        buttons.forEach((btn, index) => {
+                            if (index < rating) {
+                                btn.classList.add('active');
+                            } else {
+                                btn.classList.remove('active');
+                            }
+                        });
+                    });
+                });
+            }
+            
+            // Event listeners
+            document.addEventListener('DOMContentLoaded', function() {
+                initTheme();
+                setupQualityRatings();
+                
+                // Theme toggle
+                document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+                
+                // Navigation
+                document.querySelectorAll('.nav-tab').forEach(tab => {
+                    tab.addEventListener('click', function() {
+                        switchTab(this.dataset.tab);
+                    });
+                });
+                
+                // Context menu for timesheet cells
+                document.querySelectorAll('input[type="number"]').forEach(input => {
+                    input.addEventListener('contextmenu', showContextMenu);
+                });
+                
+                // Context menu actions
+                document.querySelectorAll('#contextMenu button').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const action = this.dataset.action;
+                        // TODO: Implement mass fill actions based on action type
+                        showToast(`Выполнено действие: ${this.textContent}`, 'success');
+                        document.getElementById('contextMenu').classList.add('hidden');
+                    });
+                });
+                
+                // Modal triggers
+                document.querySelector('[data-event="click:addEmployee"]')?.addEventListener('click', function() {
+                    showModal('employeeModal');
+                });
+                
+                document.querySelectorAll('[data-action="close-modal"]').forEach(button => {
+                    button.addEventListener('click', function() {
+                        hideModal('employeeModal');
+                    });
+                });
+                
+                // Auto-save simulation
+                document.querySelectorAll('input, select, textarea').forEach(input => {
+                    input.addEventListener('change', function() {
+                        // TODO: Implement auto-save functionality
+                        console.log('Auto-saving data...');
+                    });
+                });
+                
+                // Sample notifications
+                setTimeout(() => {
+                    showToast('Добро пожаловать в систему управления рабочим временем!', 'info');
+                }, 1000);
+            });
+            
+        })();
+    </script>
+
+</body>
+</html>
