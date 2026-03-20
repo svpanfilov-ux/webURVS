@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { mockSchedules, mockEmployees, mockShiftTemplates } from '@/lib/mock-data'
 import { Plus, Trash2 } from 'lucide-react'
 import { format, addDays } from 'date-fns'
 import { ru } from 'date-fns/locale'
@@ -48,16 +49,20 @@ export default function SchedulesPage() {
         supabase
           .from('schedules')
           .select('*')
-          .order('date', { ascending: false })
+          .order('scheduled_date', { ascending: false })
           .limit(100),
         supabase.from('employees').select('*'),
         supabase.from('shift_templates').select('*'),
       ])
 
-      setSchedules(schedulesRes.data || [])
-      setEmployees(employeesRes.data || [])
-      setShifts(shiftsRes.data || [])
+      setSchedules(schedulesRes.data || mockSchedules)
+      setEmployees(employeesRes.data || mockEmployees)
+      setShifts(shiftsRes.data || mockShiftTemplates)
     } catch (error) {
+      console.warn('Supabase не доступен, используются mock-данные', error)
+      setSchedules(mockSchedules)
+      setEmployees(mockEmployees)
+      setShifts(mockShiftTemplates)
       console.error('Error fetching data:', error)
     } finally {
       setLoading(false)

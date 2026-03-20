@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { mockFacilities } from '@/lib/mock-data'
 import { Plus, Trash2 } from 'lucide-react'
 
 interface Facility {
@@ -9,7 +10,7 @@ interface Facility {
   name: string
   address: string
   description: string
-  created_at: string
+  created_at?: string
 }
 
 export default function FacilitiesPage() {
@@ -27,9 +28,10 @@ export default function FacilitiesPage() {
     try {
       const { data, error } = await supabase.from('facilities').select('*').order('created_at', { ascending: false })
       if (error) throw error
-      setFacilities(data || [])
+      setFacilities(data || mockFacilities)
     } catch (error) {
-      console.error('Error fetching facilities:', error)
+      console.warn('Supabase не доступен, используются mock-данные', error)
+      setFacilities(mockFacilities)
     } finally {
       setLoading(false)
     }

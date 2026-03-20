@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { mockShiftTemplates } from '@/lib/mock-data'
 import { Plus, Trash2 } from 'lucide-react'
 
 interface ShiftTemplate {
@@ -9,8 +10,9 @@ interface ShiftTemplate {
   name: string
   start_time: string
   end_time: string
-  description: string
-  created_at: string
+  duration_hours?: number
+  description?: string
+  created_at?: string
 }
 
 export default function ShiftTemplatesPage() {
@@ -33,9 +35,10 @@ export default function ShiftTemplatesPage() {
     try {
       const { data, error } = await supabase.from('shift_templates').select('*').order('created_at', { ascending: false })
       if (error) throw error
-      setShifts(data || [])
+      setShifts(data || mockShiftTemplates)
     } catch (error) {
-      console.error('Error fetching shifts:', error)
+      console.warn('Supabase не доступен, используются mock-данные', error)
+      setShifts(mockShiftTemplates)
     } finally {
       setLoading(false)
     }

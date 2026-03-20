@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { mockEmployees, mockPositions, mockFacilities } from '@/lib/mock-data'
 import { Plus, Trash2 } from 'lucide-react'
 
 interface Employee {
@@ -53,11 +54,14 @@ export default function EmployeesPage() {
         supabase.from('facilities').select('*'),
       ])
 
-      setEmployees(employeesRes.data || [])
-      setPositions(positionsRes.data || [])
-      setFacilities(facilitiesRes.data || [])
+      setEmployees(employeesRes.data || mockEmployees)
+      setPositions(positionsRes.data || mockPositions)
+      setFacilities(facilitiesRes.data || mockFacilities)
     } catch (error) {
-      console.error('Error fetching data:', error)
+      console.warn('Supabase не доступен, используются mock-данные', error)
+      setEmployees(mockEmployees)
+      setPositions(mockPositions)
+      setFacilities(mockFacilities)
     } finally {
       setLoading(false)
     }

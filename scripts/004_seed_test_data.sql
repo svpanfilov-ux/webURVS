@@ -1,8 +1,7 @@
--- Очистка старых данных (опционально, раскомментируйте если нужно переделать)
--- TRUNCATE timesheets, schedules, shift_templates, employees, positions, facilities, profiles CASCADE;
+-- Просто вставляем тестовые данные (если таблицы существуют)
 
 -- Создание тестовых профилей пользователей
-INSERT INTO profiles (id, email, full_name, role, created_at) VALUES
+INSERT INTO public.profiles (id, email, full_name, role, created_at) VALUES
   ('550e8400-e29b-41d4-a716-446655440001', 'admin@test.com', 'Администратор', 'admin', NOW()),
   ('550e8400-e29b-41d4-a716-446655440002', 'manager@test.com', 'Иван Иванов', 'manager', NOW()),
   ('550e8400-e29b-41d4-a716-446655440003', 'emp1@test.com', 'Петр Петров', 'employee', NOW()),
@@ -10,60 +9,60 @@ INSERT INTO profiles (id, email, full_name, role, created_at) VALUES
   ('550e8400-e29b-41d4-a716-446655440005', 'emp3@test.com', 'Александр Козлов', 'employee', NOW()),
   ('550e8400-e29b-41d4-a716-446655440006', 'emp4@test.com', 'Елена Новикова', 'employee', NOW()),
   ('550e8400-e29b-41d4-a716-446655440007', 'emp5@test.com', 'Дмитрий Соколов', 'employee', NOW())
-ON CONFLICT DO NOTHING;
+;
 
 -- Создание тестовых объектов (филиалов)
-INSERT INTO facilities (id, name, address, description, created_by, created_at) VALUES
+INSERT INTO public.facilities (id, name, address, description, created_by, created_at) VALUES
   ('650e8400-e29b-41d4-a716-446655440001', 'Офис Москва', 'ул. Ленина, д. 1, Москва', 'Главный офис компании', '550e8400-e29b-41d4-a716-446655440001', NOW()),
   ('650e8400-e29b-41d4-a716-446655440002', 'Офис Санкт-Петербург', 'пр. Невский, д. 50, СПб', 'Филиал в Санкт-Петербурге', '550e8400-e29b-41d4-a716-446655440001', NOW()),
   ('650e8400-e29b-41d4-a716-446655440003', 'Офис Казань', 'ул. Баумана, д. 25, Казань', 'Филиал в Казани', '550e8400-e29b-41d4-a716-446655440001', NOW())
-ON CONFLICT DO NOTHING;
+;
 
 -- Создание должностей для Москвы
-INSERT INTO positions (id, facility_id, name, description, hourly_rate, required_count, created_at) VALUES
+INSERT INTO public.positions (id, facility_id, name, description, hourly_rate, required_count, created_at) VALUES
   ('750e8400-e29b-41d4-a716-446655440001', '650e8400-e29b-41d4-a716-446655440001', 'Менеджер', 'Менеджер по работе с клиентами', 500.00, 3, NOW()),
   ('750e8400-e29b-41d4-a716-446655440002', '650e8400-e29b-41d4-a716-446655440001', 'Администратор', 'Администратор офиса', 450.00, 2, NOW()),
   ('750e8400-e29b-41d4-a716-446655440003', '650e8400-e29b-41d4-a716-446655440001', 'Аналитик', 'Аналитик данных', 600.00, 1, NOW()),
   ('750e8400-e29b-41d4-a716-446655440004', '650e8400-e29b-41d4-a716-446655440001', 'Разработчик', 'Разработчик ПО', 800.00, 2, NOW())
-ON CONFLICT DO NOTHING;
+;
 
 -- Создание должностей для СПб
-INSERT INTO positions (id, facility_id, name, description, hourly_rate, required_count, created_at) VALUES
+INSERT INTO public.positions (id, facility_id, name, description, hourly_rate, required_count, created_at) VALUES
   ('750e8400-e29b-41d4-a716-446655440005', '650e8400-e29b-41d4-a716-446655440002', 'Менеджер', 'Менеджер по работе с клиентами', 500.00, 2, NOW()),
   ('750e8400-e29b-41d4-a716-446655440006', '650e8400-e29b-41d4-a716-446655440002', 'Специалист', 'Специалист техподдержки', 400.00, 2, NOW())
-ON CONFLICT DO NOTHING;
+;
 
 -- Создание должностей для Казани
-INSERT INTO positions (id, facility_id, name, description, hourly_rate, required_count, created_at) VALUES
+INSERT INTO public.positions (id, facility_id, name, description, hourly_rate, required_count, created_at) VALUES
   ('750e8400-e29b-41d4-a716-446655440007', '650e8400-e29b-41d4-a716-446655440003', 'Менеджер', 'Менеджер по работе с клиентами', 480.00, 1, NOW()),
   ('750e8400-e29b-41d4-a716-446655440008', '650e8400-e29b-41d4-a716-446655440003', 'Администратор', 'Администратор офиса', 420.00, 1, NOW())
-ON CONFLICT DO NOTHING;
+;
 
 -- Создание тестовых сотрудников в Москве
-INSERT INTO employees (id, profile_id, facility_id, position_id, first_name, last_name, phone, email, hire_date, status, created_at) VALUES
+INSERT INTO public.employees (id, profile_id, facility_id, position_id, first_name, last_name, phone, email, hire_date, status, created_at) VALUES
   ('850e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440003', '650e8400-e29b-41d4-a716-446655440001', '750e8400-e29b-41d4-a716-446655440001', 'Петр', 'Петров', '+79991234567', 'emp1@test.com', '2024-01-15', 'active', NOW()),
   ('850e8400-e29b-41d4-a716-446655440002', '550e8400-e29b-41d4-a716-446655440004', '650e8400-e29b-41d4-a716-446655440001', '750e8400-e29b-41d4-a716-446655440001', 'Мария', 'Сидорова', '+79991234568', 'emp2@test.com', '2024-02-01', 'active', NOW()),
   ('850e8400-e29b-41d4-a716-446655440003', '550e8400-e29b-41d4-a716-446655440005', '650e8400-e29b-41d4-a716-446655440001', '750e8400-e29b-41d4-a716-446655440002', 'Александр', 'Козлов', '+79991234569', 'emp3@test.com', '2024-01-20', 'active', NOW()),
   ('850e8400-e29b-41d4-a716-446655440004', '550e8400-e29b-41d4-a716-446655440006', '650e8400-e29b-41d4-a716-446655440001', '750e8400-e29b-41d4-a716-446655440003', 'Елена', 'Новикова', '+79991234570', 'emp4@test.com', '2024-02-10', 'active', NOW())
-ON CONFLICT DO NOTHING;
+;
 
 -- Создание тестовых сотрудников в СПб
-INSERT INTO employees (id, profile_id, facility_id, position_id, first_name, last_name, phone, email, hire_date, status, created_at) VALUES
+INSERT INTO public.employees (id, profile_id, facility_id, position_id, first_name, last_name, phone, email, hire_date, status, created_at) VALUES
   ('850e8400-e29b-41d4-a716-446655440005', '550e8400-e29b-41d4-a716-446655440007', '650e8400-e29b-41d4-a716-446655440002', '750e8400-e29b-41d4-a716-446655440005', 'Дмитрий', 'Соколов', '+79991234571', 'emp5@test.com', '2024-01-25', 'active', NOW())
-ON CONFLICT DO NOTHING;
+;
 
 -- Создание шаблонов смен
-INSERT INTO shift_templates (id, facility_id, name, start_time, end_time, duration_hours, description, created_at) VALUES
+INSERT INTO public.shift_templates (id, facility_id, name, start_time, end_time, duration_hours, description, created_at) VALUES
   ('950e8400-e29b-41d4-a716-446655440001', '650e8400-e29b-41d4-a716-446655440001', 'Утренняя', '08:00:00', '16:00:00', 8, 'Утренняя смена 8:00-16:00', NOW()),
   ('950e8400-e29b-41d4-a716-446655440002', '650e8400-e29b-41d4-a716-446655440001', 'Дневная', '12:00:00', '20:00:00', 8, 'Дневная смена 12:00-20:00', NOW()),
   ('950e8400-e29b-41d4-a716-446655440003', '650e8400-e29b-41d4-a716-446655440001', 'Вечерняя', '16:00:00', '00:00:00', 8, 'Вечерняя смена 16:00-00:00', NOW()),
   ('950e8400-e29b-41d4-a716-446655440004', '650e8400-e29b-41d4-a716-446655440002', 'Полный день', '09:00:00', '18:00:00', 9, 'Полный день 9:00-18:00', NOW()),
   ('950e8400-e29b-41d4-a716-446655440005', '650e8400-e29b-41d4-a716-446655440002', 'Сокращенный', '10:00:00', '16:00:00', 6, 'Сокращенный день 10:00-16:00', NOW())
-ON CONFLICT DO NOTHING;
+;
 
 -- Создание расписаний (графиков) на март 2025
 -- Понедельник - пятница для Москвы
-INSERT INTO schedules (id, facility_id, employee_id, position_id, shift_template_id, scheduled_date, start_time, end_time, notes, created_by, created_at) VALUES
+INSERT INTO public.schedules (id, facility_id, employee_id, position_id, shift_template_id, scheduled_date, start_time, end_time, notes, created_by, created_at) VALUES
   -- Петр Петров (Москва)
   ('a50e8400-e29b-41d4-a716-446655440001', '650e8400-e29b-41d4-a716-446655440001', '850e8400-e29b-41d4-a716-446655440001', '750e8400-e29b-41d4-a716-446655440001', '950e8400-e29b-41d4-a716-446655440001', '2025-03-17', '08:00:00', '16:00:00', 'Понедельник', '550e8400-e29b-41d4-a716-446655440001', NOW()),
   ('a50e8400-e29b-41d4-a716-446655440002', '650e8400-e29b-41d4-a716-446655440001', '850e8400-e29b-41d4-a716-446655440001', '750e8400-e29b-41d4-a716-446655440001', '950e8400-e29b-41d4-a716-446655440001', '2025-03-18', '08:00:00', '16:00:00', 'Вторник', '550e8400-e29b-41d4-a716-446655440001', NOW()),
@@ -83,10 +82,10 @@ INSERT INTO schedules (id, facility_id, employee_id, position_id, shift_template
   -- Дмитрий Соколов (СПб, полный день)
   ('a50e8400-e29b-41d4-a716-446655440011', '650e8400-e29b-41d4-a716-446655440002', '850e8400-e29b-41d4-a716-446655440005', '750e8400-e29b-41d4-a716-446655440005', '950e8400-e29b-41d4-a716-446655440004', '2025-03-17', '09:00:00', '18:00:00', 'Понедельник', '550e8400-e29b-41d4-a716-446655440001', NOW()),
   ('a50e8400-e29b-41d4-a716-446655440012', '650e8400-e29b-41d4-a716-446655440002', '850e8400-e29b-41d4-a716-446655440005', '750e8400-e29b-41d4-a716-446655440005', '950e8400-e29b-41d4-a716-446655440004', '2025-03-18', '09:00:00', '18:00:00', 'Вторник', '550e8400-e29b-41d4-a716-446655440001', NOW())
-ON CONFLICT DO NOTHING;
+;
 
 -- Создание тестовых табелей (отметок присутствия)
-INSERT INTO timesheets (id, facility_id, employee_id, schedule_id, check_in_time, check_out_time, notes, status, created_at) VALUES
+INSERT INTO public.timesheets (id, facility_id, employee_id, schedule_id, check_in_time, check_out_time, notes, status, created_at) VALUES
   -- Петр Петров
   ('b50e8400-e29b-41d4-a716-446655440001', '650e8400-e29b-41d4-a716-446655440001', '850e8400-e29b-41d4-a716-446655440001', 'a50e8400-e29b-41d4-a716-446655440001', '2025-03-17 08:05:00+03', '2025-03-17 16:00:00+03', 'Вовремя', 'approved', NOW()),
   ('b50e8400-e29b-41d4-a716-446655440002', '650e8400-e29b-41d4-a716-446655440001', '850e8400-e29b-41d4-a716-446655440001', 'a50e8400-e29b-41d4-a716-446655440002', '2025-03-18 08:00:00+03', '2025-03-18 16:15:00+03', 'Немного задержались', 'approved', NOW()),
@@ -102,7 +101,7 @@ INSERT INTO timesheets (id, facility_id, employee_id, schedule_id, check_in_time
   -- Дмитрий Соколов
   ('b50e8400-e29b-41d4-a716-446655440007', '650e8400-e29b-41d4-a716-446655440002', '850e8400-e29b-41d4-a716-446655440005', 'a50e8400-e29b-41d4-a716-446655440011', '2025-03-17 09:00:00+03', '2025-03-17 18:00:00+03', '', 'approved', NOW()),
   ('b50e8400-e29b-41d4-a716-446655440008', '650e8400-e29b-41d4-a716-446655440002', '850e8400-e29b-41d4-a716-446655440005', 'a50e8400-e29b-41d4-a716-446655440012', '2025-03-18 09:05:00+03', '2025-03-18 18:00:00+03', '', 'approved', NOW())
-ON CONFLICT DO NOTHING;
+;
 
 -- Вывод статистики загруженных данных
 SELECT 

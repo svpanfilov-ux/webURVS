@@ -2,15 +2,17 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { mockPositions } from '@/lib/mock-data'
 import { Plus, Trash2 } from 'lucide-react'
 
 interface Position {
   id: string
   name: string
   description: string
-  salary_min: number
-  salary_max: number
-  created_at: string
+  hourly_rate?: number
+  salary_min?: number
+  salary_max?: number
+  created_at?: string
 }
 
 export default function PositionsPage() {
@@ -33,9 +35,10 @@ export default function PositionsPage() {
     try {
       const { data, error } = await supabase.from('positions').select('*').order('created_at', { ascending: false })
       if (error) throw error
-      setPositions(data || [])
+      setPositions(data || mockPositions)
     } catch (error) {
-      console.error('Error fetching positions:', error)
+      console.warn('Supabase не доступен, используются mock-данные', error)
+      setPositions(mockPositions)
     } finally {
       setLoading(false)
     }
