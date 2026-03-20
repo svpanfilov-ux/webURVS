@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --background: #f0f4f8;
+  --foreground: #1a2332;
+  --surface: #ffffff;
+  --primary: #2d6a8f;
+  --primary-hover: #245a7a;
+  --secondary: #4a8fad;
+  --accent: #e8f4f8;
+  --muted: #64748b;
+  --border: #d1dfe8;
+  --destructive: #dc2626;
+  --radius: 0.5rem;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -13,11 +27,12 @@ html {
 }
 
 body {
-  background-color: #ffffff;
-  color: #000000;
+  background-color: var(--background);
+  color: var(--foreground);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
 }

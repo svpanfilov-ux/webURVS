@@ -7,13 +7,18 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: '#ffffff',
-        foreground: '#000000',
-        primary: '#2563eb',
-        secondary: '#64748b',
-        accent: '#f97316',
-        muted: '#f1f5f9',
-        destructive: '#ef4444',
+        background: 'var(--background)',
+        foreground: 'var(--foreground)',
+        surface: 'var(--surface)',
+        primary: 'var(--primary)',
+        secondary: 'var(--secondary)',
+        accent: 'var(--accent)',
+        muted: 'var(--muted)',
+        border: 'var(--border)',
+        destructive: 'var(--destructive)',
+      },
+      borderRadius: {
+        DEFAULT: 'var(--radius)',
       },
     },
   },

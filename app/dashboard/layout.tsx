@@ -1,131 +1,111 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
-import { LogOut, Menu, X } from 'lucide-react'
+import { getMockRole, clearMockRole } from '@/lib/mock-auth'
+import { LogOut, Menu, X, LayoutDashboard, Building2, Briefcase, Users, CalendarDays, Clock } from 'lucide-react'
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const [user, setUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+const navItems = [
+  { href: '/dashboard', label: 'Обзор', icon: LayoutDashboard },
+  { href: '/dashboard/facilities', label: 'Объекты', icon: Building2 },
+  { href: '/dashboard/positions', label: 'Должности', icon: Briefcase },
+  { href: '/dashboard/employees', label: 'Сотрудники', icon: Users },
+  { href: '/dashboard/schedules', label: 'Расписания', icon: CalendarDays },
+  { href: '/dashboard/shift-templates', label: 'Шаблоны смен', icon: Clock },
+]
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [ready, setReady] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
+  const pathname = usePathname()
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        router.push('/auth/login')
-      } else {
-        setUser(user)
-      }
-      setLoading(false)
+    const role = getMockRole()
+    if (role !== 'admin') {
+      router.replace('/')
+    } else {
+      setReady(true)
     }
-    checkAuth()
-  }, [router, supabase.auth])
+  }, [router])
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
+  const handleLogout = () => {
+    clearMockRole()
     router.push('/')
   }
 
-  if (loading) {
+  if (!ready) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Загрузка...</p>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
       <aside
-        className={`${
-          sidebarOpen ? 'w-64' : 'w-20'
-        } bg-gray-900 text-white transition-all duration-300 flex flex-col`}
+        className={`${sidebarOpen ? 'w-60' : 'w-16'} bg-foreground text-white transition-all duration-300 flex flex-col flex-shrink-0`}
       >
-        <div className="p-4 border-b border-gray-800">
-          <div className="flex items-center justify-between">
-            {sidebarOpen && <h2 className="text-xl font-bold">Schedule</h2>}
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-1 hover:bg-gray-800 rounded"
-            >
-              {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
-          </div>
+        {/* Logo */}
+        <div className="h-16 px-4 border-b border-white/10 flex items-center justify-between">
+          {sidebarOpen && (
+            <span className="font-bold text-sm tracking-wide uppercase text-white/80">
+              Admin Panel
+            </span>
+          )}
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-1.5 rounded hover:bg-white/10 transition text-white/60 hover:text-white ml-auto"
+            aria-label="Переключить меню"
+          >
+            {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
         </div>
 
-        <nav className="flex-1 p-4 space-y-2">
-          <Link
-            href="/dashboard"
-            className="block p-3 rounded hover:bg-gray-800 transition"
-          >
-            {sidebarOpen ? '📊 Обзор' : '📊'}
-          </Link>
-          <Link
-            href="/dashboard/facilities"
-            className="block p-3 rounded hover:bg-gray-800 transition"
-          >
-            {sidebarOpen ? '🏢 Объекты' : '🏢'}
-          </Link>
-          <Link
-            href="/dashboard/positions"
-            className="block p-3 rounded hover:bg-gray-800 transition"
-          >
-            {sidebarOpen ? '👔 Должности' : '👔'}
-          </Link>
-          <Link
-            href="/dashboard/employees"
-            className="block p-3 rounded hover:bg-gray-800 transition"
-          >
-            {sidebarOpen ? '👥 Сотрудники' : '👥'}
-          </Link>
-          <Link
-            href="/dashboard/schedules"
-            className="block p-3 rounded hover:bg-gray-800 transition"
-          >
-            {sidebarOpen ? '📅 Расписания' : '📅'}
-          </Link>
-          <Link
-            href="/dashboard/shift-templates"
-            className="block p-3 rounded hover:bg-gray-800 transition"
-          >
-            {sidebarOpen ? '⏱️ Шаблоны смен' : '⏱️'}
-          </Link>
+        {/* Nav */}
+        <nav className="flex-1 py-4 space-y-0.5 px-2">
+          {navItems.map(({ href, label, icon: Icon }) => {
+            const active = pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                  ${active
+                    ? 'bg-primary text-white'
+                    : 'text-white/60 hover:text-white hover:bg-white/10'
+                  }`}
+              >
+                <Icon size={18} className="flex-shrink-0" />
+                {sidebarOpen && <span>{label}</span>}
+              </Link>
+            )
+          })}
         </nav>
 
-        <div className="p-4 border-t border-gray-800">
+        {/* Logout */}
+        <div className="p-3 border-t border-white/10">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 p-3 rounded hover:bg-gray-800 transition"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/60 hover:text-white hover:bg-white/10 transition-colors"
           >
-            <LogOut size={20} />
-            {sidebarOpen && 'Выход'}
+            <LogOut size={18} className="flex-shrink-0" />
+            {sidebarOpen && 'Выйти'}
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">Админ-панель</h1>
-            <div className="text-sm text-gray-600">
-              {user?.email}
-            </div>
-          </div>
+      {/* Main */}
+      <main className="flex-1 flex flex-col min-w-0">
+        <header className="h-16 bg-surface border-b border-border px-6 flex items-center justify-between flex-shrink-0">
+          <h1 className="text-lg font-semibold text-foreground">Административная панель</h1>
+          <span className="text-xs font-medium text-white bg-primary px-3 py-1 rounded-full">
+            Администратор
+          </span>
         </header>
-
-        {/* Content */}
         <div className="flex-1 overflow-auto p-6">
           {children}
         </div>
